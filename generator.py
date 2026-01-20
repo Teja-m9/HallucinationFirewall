@@ -1,0 +1,232 @@
+"""
+Response Generation Module for VDHF
+
+Handles LLM-based response generation using retrieved context.
+"""
+
+import os
+from typing import List, Optional, Dict, Any
+
+from config import (
+    GROQ_API_KEY,
+    LLM_MODEL,
+    MAX_TOKENS,
+    TEMPERATURE,
+    INITIAL_GENERATION_PROMPT
+)
+from retriever import RetrievedEvidence
+
+
+class ResponseGenerator:
+    """
+    Response Generation Module
+    
+    Purpose:
+    - Generate initial response using retrieved context
+    - Support Groq Cloud API
+    - Provide fallback for testing without API
+    """
+    
+    def __init__(
+        self,
+        model: str = LLM_MODEL,
+        api_key: Optional[str] = None,
+        max_tokens: int = MAX_TOKENS,
+        temperature: float = TEMPERATURE
+    ):
+        self.model = model
+        self.api_key = api_key or GROQ_API_KEY
+        self.max_tokens = max_tokens
+        self.temperature = temperature
+        self._client = None
+        
+        # Initialize Groq client if API key is available
+        if self.api_key:
+            try:
+                from groq import Groq
+                self._client = Groq(api_key=self.api_key)
+            except ImportError:
+                print("Warning: groq package not installed. Using mock generation.")
+    
+    def generate(
+        self,
+        query: str,
+        context: str,
+        prompt_template: Optional[str] = None
+    ) -> str:
+        """
+        Generate a response using the LLM.
+        
+        Args:
+            query: User query
+            context: Retrieved context/evidence
+            prompt_template: Custom prompt template (uses default if not provided)
+            
+        Returns:
+            Generated response string
+        """
+        template = prompt_template or INITIAL_GENERATION_PROMPT
+        
+        # Format prompt
+        prompt = template.format(
+            context=context,
+            question=query
+        )
+        
+        # Use Groq if available, otherwise mock
+        if self._client:
+            return self._generate_groq(prompt)
+        else:
+            return self._generate_mock(query, context)
+    
+    def _generate_groq(self, prompt: str) -> str:
+        """Generate using Groq API."""
+        try:
+            response = self._client.chat.completions.create(
+                model=self.model,
+                messages=[
+                    {"role": "system", "content": "You are a helpful assistant that provides accurate, factual answers based on the given context."},
+                    {"role": "user", "content": prompt}
+                ],
+                max_tokens=self.max_tokens,
+                temperature=self.temperature
+            )
+            return response.choices[0].message.content.strip()
+        except Exception as e:
+            print(f"Groq API error: {e}")
+            return self._generate_mock_from_prompt(prompt)
+    
+    def _generate_mock(self, query: str, context: str) -> str:
+        """Generate a mock response for testing without API."""
+        # Extract key information from context
+        sentences = context.split('.')
+        relevant_sentences = []
+        
+        query_words = set(query.lower().split())
+        
+        for sentence in sentences:
+            sentence = sentence.strip()
+            if not sentence:
+                continue
+            
+            sentence_words = set(sentence.lower().split())
+            overlap = query_words & sentence_words
+            
+            if len(overlap) >= 1 or len(relevant_sentences) < 2:
+                relevant_sentences.append(sentence)
+        
+        if relevant_sentences:
+            response = ". ".join(relevant_sentences[:3])
+            if not response.endswith('.'):
+                response += '.'
+            return response
+        else:
+            return f"Based on the available information: {context[:200]}..."
+    
+    def _generate_mock_from_prompt(self, prompt: str) -> str:
+        """Extract a simple response from the prompt context."""
+        # Find context section
+        if "Context:" in prompt:
+            start = prompt.find("Context:") + len("Context:")
+            end = prompt.find("Question:")
+            if end > start:
+                context = prompt[start:end].strip()
+                return self._generate_mock("", context)
+        return "Unable to generate response from the provided context."
+    
+    def generate_with_evidence(
+        self,
+        query: str,
+        evidence_list: List[RetrievedEvidence],
+        prompt_template: Optional[str] = None
+    ) -> str:
+        """
+        Generate a response using evidence list.
+        
+        Args:
+            query: User query
+            evidence_list: List of RetrievedEvidence objects
+            prompt_template: Custom prompt template
+            
+        Returns:
+            Generated response string
+        """
+        # Build context string from evidence
+        context_parts = []
+        for ev in evidence_list:
+            source = ev.metadata.get("source", "Unknown")
+            context_parts.append(f"[Source: {source}]\n{ev.content}")
+        
+        context = "\n\n---\n\n".join(context_parts)
+        
+        return self.generate(query, context, prompt_template)
+    
+    def regenerate_with_refinement(
+        self,
+        query: str,
+        verified_evidence: str,
+        prompt_template: str
+    ) -> str:
+        """
+        Regenerate response using refined prompt.
+        
+        Args:
+            query: Original user query
+            verified_evidence: Only verified evidence
+            prompt_template: Refined prompt template
+            
+        Returns:
+            Regenerated response
+        """
+        prompt = prompt_template.format(
+            question=query,
+            evidence=verified_evidence
+        )
+        
+        if self._client:
+            return self._generate_groq(prompt)
+        else:
+            return self._generate_mock(query, verified_evidence)
+
+
+class GenerationResult:
+    """Container for generation results with metadata."""
+    
+    def __init__(
+        self,
+        response: str,
+        query: str,
+        context: str,
+        is_regenerated: bool = False,
+        attempt_number: int = 1
+    ):
+        self.response = response
+        self.query = query
+        self.context = context
+        self.is_regenerated = is_regenerated
+        self.attempt_number = attempt_number
+    
+    def __str__(self) -> str:
+        status = "Regenerated" if self.is_regenerated else "Initial"
+        return f"[{status} Response - Attempt {self.attempt_number}]\n{self.response}"
+
+
+if __name__ == "__main__":
+    # Test generator
+    print("Generator Module - Test")
+    print("-" * 40)
+    
+    generator = ResponseGenerator()
+    
+    # Test with mock context
+    query = "Who created Python and when?"
+    context = """
+    Python is a high-level programming language created by Guido van Rossum. 
+    It was first released in 1991. Python emphasizes code readability and 
+    supports multiple programming paradigms.
+    """
+    
+    response = generator.generate(query, context)
+    print(f"Query: {query}")
+    print(f"\nContext: {context.strip()[:100]}...")
+    print(f"\nGenerated Response:\n{response}")

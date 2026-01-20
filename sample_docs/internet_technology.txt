@@ -1,0 +1,46 @@
+Internet and Web Technology
+
+The Internet is a global network of interconnected computer networks using 
+standardized communication protocols. It enables data exchange between billions 
+of devices worldwide.
+
+History of the Internet:
+
+ARPANET was the precursor to the Internet, developed by the U.S. Department of 
+Defense. The first message was sent on October 29, 1969, between UCLA and Stanford 
+Research Institute.
+
+TCP/IP (Transmission Control Protocol/Internet Protocol) was developed by Vint 
+Cerf and Bob Kahn in 1974. It became the standard protocol for ARPANET in 1983.
+
+Tim Berners-Lee invented the World Wide Web at CERN in 1989. The first website 
+went live on August 6, 1991. HTML (HyperText Markup Language) and HTTP (HyperText 
+Transfer Protocol) were created to enable web communication.
+
+Key Technologies:
+
+DNS (Domain Name System):
+Translates human-readable domain names (like google.com) into IP addresses. The 
+first DNS server was implemented in 1984.
+
+HTTP and HTTPS:
+HTTP is the protocol for transferring web pages. HTTPS adds encryption using TLS 
+(Transport Layer Security) for secure communication. HTTPS became widely adopted 
+after 2015.
+
+Web Browsers:
+Mosaic (1993) was the first popular graphical web browser. Netscape Navigator 
+launched in 1994. Google Chrome was released in 2008 and became the most popular 
+browser by 2012.
+
+Internet Milestones:
+- 1995: Amazon and eBay were founded
+- 1998: Google was founded by Larry Page and Sergey Brin
+- 2004: Facebook was launched by Mark Zuckerberg
+- 2005: YouTube was created and later acquired by Google
+- 2006: Twitter was founded
+- 2007: The first iPhone was released, popularizing mobile internet
+
+As of 2023, approximately 5.3 billion people use the Internet, representing about 
+66% of the world's population. Fiber optic cables carry 99% of international data 
+traffic across ocean floors.

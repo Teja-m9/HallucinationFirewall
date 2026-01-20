@@ -1,0 +1,44 @@
+Quantum Physics
+
+Quantum physics is the branch of physics that describes the behavior of matter 
+and energy at the atomic and subatomic scales. It was developed in the early 
+20th century to explain phenomena that classical physics could not.
+
+Foundational Concepts:
+
+Wave-Particle Duality:
+Light and matter exhibit both wave and particle properties. The double-slit 
+experiment demonstrates that electrons can behave as waves when not observed 
+and as particles when measured.
+
+Heisenberg Uncertainty Principle:
+Proposed by Werner Heisenberg in 1927. It states that it is impossible to 
+simultaneously know both the exact position and momentum of a particle. The 
+more precisely one is measured, the less precisely the other can be known.
+
+Quantum Superposition:
+A quantum system can exist in multiple states simultaneously until measured.
+Schrödinger's cat is a thought experiment illustrating superposition: a cat 
+in a box is both alive and dead until the box is opened.
+
+Quantum Entanglement:
+When particles become entangled, the quantum state of one particle instantly 
+affects the other, regardless of distance. Einstein called this "spooky action 
+at a distance." This phenomenon was confirmed experimentally and is used in 
+quantum computing and quantum cryptography.
+
+Key Figures:
+
+Max Planck (1858-1947): Introduced energy quanta in 1900, considered the father 
+of quantum theory. Won Nobel Prize in Physics in 1918.
+
+Niels Bohr (1885-1962): Developed the Bohr model of the atom in 1913, describing 
+electrons in discrete energy levels. Won Nobel Prize in Physics in 1922.
+
+Erwin Schrödinger (1887-1961): Developed the Schrödinger equation in 1926, which 
+describes how quantum states evolve over time. Won Nobel Prize in Physics in 1933.
+
+Applications:
+Quantum physics underlies modern technologies including lasers, transistors, 
+LEDs, and MRI machines. Quantum computers use quantum bits (qubits) that can 
+exist in superposition, potentially solving problems classical computers cannot.

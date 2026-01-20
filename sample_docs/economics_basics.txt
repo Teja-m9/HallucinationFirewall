@@ -1,0 +1,43 @@
+Economics Basics
+
+Economics is the social science that studies the production, distribution, and 
+consumption of goods and services. It examines how individuals, businesses, 
+governments, and nations make choices about allocating resources.
+
+Key Economic Concepts:
+
+Supply and Demand:
+Supply refers to the quantity of goods producers are willing to sell at various 
+prices. Demand refers to the quantity consumers are willing to buy at various 
+prices. The equilibrium price is where supply equals demand.
+
+Gross Domestic Product (GDP):
+GDP measures the total value of goods and services produced within a country in 
+a specific period. It is calculated as: GDP = C + I + G + (X - M), where C is 
+consumption, I is investment, G is government spending, X is exports, and M is imports.
+
+Inflation:
+Inflation is the rate at which the general price level rises over time. It is 
+measured by the Consumer Price Index (CPI). The Federal Reserve targets a 2% 
+annual inflation rate for the United States economy.
+
+Unemployment:
+The unemployment rate measures the percentage of the labor force without jobs 
+and actively seeking work. Types include frictional, structural, and cyclical 
+unemployment. Full employment is generally considered to be around 4-5% unemployment.
+
+Economic Systems:
+- Capitalism: Private ownership and free markets determine production
+- Socialism: Government owns major industries, distributes goods
+- Mixed Economy: Combines elements of capitalism and socialism
+
+Central Banks:
+The Federal Reserve (Fed) is the central bank of the United States, established 
+in 1913. The European Central Bank (ECB) manages monetary policy for the Eurozone.
+Central banks control money supply and interest rates to achieve economic stability.
+
+Fiscal Policy involves government spending and taxation decisions. Monetary Policy 
+involves central bank actions to control money supply and interest rates.
+
+The Great Depression (1929-1939) was the worst economic downturn in modern history.
+It began with the stock market crash on October 29, 1929 (Black Tuesday).

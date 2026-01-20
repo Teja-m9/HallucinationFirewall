@@ -1,0 +1,37 @@
+The Solar System
+
+The Solar System formed approximately 4.6 billion years ago from a giant molecular 
+cloud. It consists of the Sun and all celestial objects gravitationally bound to it.
+
+The Sun contains 99.86% of the Solar System's mass. It is a G-type main-sequence 
+star and is composed primarily of hydrogen (73%) and helium (25%).
+
+The eight planets of the Solar System in order from the Sun:
+1. Mercury - Smallest planet, closest to Sun, no atmosphere
+2. Venus - Hottest planet, thick atmosphere, rotates backwards
+3. Earth - Only known planet with life, has one moon
+4. Mars - Red planet, has two moons (Phobos and Deimos)
+5. Jupiter - Largest planet, has Great Red Spot, 95 known moons
+6. Saturn - Known for prominent rings, 146 known moons
+7. Uranus - Ice giant, rotates on its side, 28 known moons
+8. Neptune - Windiest planet, has Great Dark Spot, 16 known moons
+
+Pluto was reclassified as a dwarf planet by the International Astronomical Union 
+(IAU) in 2006. Other dwarf planets include Eris, Haumea, Makemake, and Ceres.
+
+The asteroid belt is located between Mars and Jupiter. It contains millions of 
+rocky objects, with Ceres being the largest at about 940 km in diameter.
+
+The Kuiper Belt extends beyond Neptune's orbit and contains icy bodies including 
+Pluto. The Oort Cloud is a theoretical spherical shell of icy objects at the 
+outer edge of the Solar System.
+
+Notable spacecraft missions:
+- Voyager 1 launched in 1977, entered interstellar space in 2012
+- Mars rovers: Spirit (2004), Opportunity (2004), Curiosity (2012), Perseverance (2021)
+- New Horizons flew by Pluto in 2015
+- Cassini orbited Saturn from 2004 to 2017
+
+The habitable zone, also called the Goldilocks zone, is the region around a star 
+where liquid water could exist on a planet's surface. Earth is within the Sun's 
+habitable zone.

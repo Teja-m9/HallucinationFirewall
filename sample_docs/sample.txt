@@ -1,0 +1,52 @@
+Python Programming Language
+
+Python is a high-level, general-purpose programming language. Its design philosophy 
+emphasizes code readability with the use of significant indentation.
+
+Python was conceived in the late 1980s by Guido van Rossum at Centrum Wiskunde & 
+Informatica (CWI) in the Netherlands. Python was first released in 1991.
+
+Guido van Rossum began working on Python in the late 1980s as a successor to the 
+ABC programming language. He chose the name Python because he was a fan of the 
+British comedy series "Monty Python's Flying Circus."
+
+Python consistently ranks as one of the most popular programming languages. 
+It is used for web development, data science, artificial intelligence, 
+scientific computing, and automation.
+
+Key features of Python include:
+- Dynamic typing and binding
+- Built-in data structures like lists, tuples, and dictionaries
+- Support for modules and packages
+- Extensive standard library
+- Support for multiple programming paradigms
+
+Python 2.0 was released on October 16, 2000. Python 3.0 was released on 
+December 3, 2008. Python 2.7 reached end of life on January 1, 2020.
+
+The Python Software Foundation (PSF) is a non-profit organization that holds 
+the intellectual property rights behind Python and organizes PyCon.
+
+World War I
+
+World War I, often abbreviated as WWI, was a global conflict that lasted from 
+1914 to 1918. It was one of the deadliest conflicts in human history.
+
+The war was triggered by the assassination of Archduke Franz Ferdinand of 
+Austria-Hungary on June 28, 1914, in Sarajevo by Gavrilo Princip.
+
+Several factors contributed to the outbreak of World War I:
+- Militarism: The buildup of military forces and arms race between nations
+- Alliances: Complex web of alliances that drew nations into conflict
+- Imperialism: Competition for colonies and global influence
+- Nationalism: Strong national pride and desire for independence
+
+The major Allied Powers included France, the United Kingdom, Russia, Italy, 
+and later the United States. The Central Powers included Germany, Austria-Hungary, 
+the Ottoman Empire, and Bulgaria.
+
+The war ended on November 11, 1918, when an armistice was signed. The Treaty 
+of Versailles was signed on June 28, 1919, officially ending the war.
+
+An estimated 9 million soldiers and 7 million civilians died as a result of 
+the war, making it one of the deadliest conflicts in history.

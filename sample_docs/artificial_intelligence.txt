@@ -1,0 +1,36 @@
+Artificial Intelligence
+
+Artificial Intelligence (AI) is a branch of computer science that aims to create 
+intelligent machines capable of performing tasks that typically require human intelligence.
+
+The term "Artificial Intelligence" was coined by John McCarthy in 1956 at the 
+Dartmouth Conference. This conference is widely considered the birthplace of AI as a field.
+
+Types of AI:
+- Narrow AI (Weak AI): Designed for specific tasks like voice recognition or playing chess
+- General AI (Strong AI): Hypothetical AI with human-like general intelligence
+- Superintelligent AI: Hypothetical AI surpassing human intelligence in all domains
+
+Machine Learning is a subset of AI that enables systems to learn from data without 
+being explicitly programmed. Deep Learning is a subset of Machine Learning using 
+neural networks with multiple layers.
+
+Key milestones in AI history:
+- 1950: Alan Turing proposed the Turing Test for machine intelligence
+- 1997: IBM's Deep Blue defeated world chess champion Garry Kasparov
+- 2011: IBM Watson won Jeopardy! against human champions
+- 2016: Google DeepMind's AlphaGo defeated Go world champion Lee Sedol
+- 2022: ChatGPT was released by OpenAI, demonstrating advanced language capabilities
+
+Neural networks are computing systems inspired by biological neural networks in 
+the brain. They consist of interconnected nodes (neurons) organized in layers.
+
+Common applications of AI include:
+- Natural Language Processing (NLP) for text and speech understanding
+- Computer Vision for image and video analysis
+- Autonomous vehicles and robotics
+- Medical diagnosis and drug discovery
+- Recommendation systems for content and products
+
+The AI winter refers to periods of reduced funding and interest in AI research. 
+The first AI winter occurred from 1974 to 1980, and the second from 1987 to 1993.

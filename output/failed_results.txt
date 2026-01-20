@@ -1,0 +1,24 @@
+FAILED VERIFICATION RESULTS
+Generated: 2026-01-19 23:54:52
+============================================================
+
+Total Failed: 14
+
+[1] [Python] Python was created by Microsoft. (Score: 0.202) - Hallucination
+[2] [World War I] World War I started in 1920. (Score: 0.309) - Hallucination
+[3] [World War I] WWI lasted for 10 years. (Score: 0.309) - Hallucination
+[4] [Artificial Intelligence] AI was invented by Steve Jobs. (Score: 0.154) - Hallucination
+[5] [Artificial Intelligence] The first AI was created in 2010. (Score: 0.309) - Hallucination
+[6] [Solar System] The Solar System formed 4.6 billion years ago. (Score: 0.104) - Below threshold
+[7] [Solar System] Mars has 10 moons. (Score: 0.194) - Hallucination
+[8] [Solar System] The Sun is a planet. (Score: 0.279) - Hallucination
+[9] [World War II] World War II lasted from 1939 to 1945. (Score: 0.225) - Below threshold
+[10] [World War II] WWII started in 1950. (Score: 0.000) - Hallucination
+[11] [World War II] Germany won World War II. (Score: 0.263) - Hallucination
+[12] [Economics] The Great Depression began in 1929. (Score: 0.144) - Below threshold
+[13] [Economics] Inflation means prices are going down. (Score: 0.000) - Hallucination
+[14] [Internet] The internet was invented by Bill Gates. (Score: 0.151) - Hallucination
+
+[2026-01-19 23:55:13] [INTERACTIVE] Explain key points about pokemon
+Score: 0.000 - Decision: FAIL
+----------------------------------------
