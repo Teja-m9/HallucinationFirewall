@@ -165,7 +165,12 @@ class EntailmentChecker:
             best_label = 'NEUTRAL'
             best_score = 0.0
 
-            for result in results:
+            # Handle both formats: list of dicts or list of list of dicts (top_k=None)
+            items = results
+            if isinstance(results, list) and results and isinstance(results[0], list):
+                items = results[0]
+
+            for result in items:
                 label = result['label'].upper()
                 score = result['score']
 

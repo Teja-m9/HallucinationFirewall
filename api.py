@@ -334,18 +334,13 @@ def query(req: QueryRequest):
     # Strip any [Source: ...] tags that leaked into the response
     clean_response = re.sub(r'\[Source:\s*[^\]]*\]\s*', '', result.final_response).strip()
 
-    # ── Build explanation based on verification outcome ──────────────────
-    if result.supported_claims == 0 and result.total_claims > 0:
-        clean_response = (
-            f"Hallucination detected: The generated response could not be verified against the uploaded documents. "
-            f"None of the {result.total_claims} claim(s) in the response were supported by the available evidence. "
-            f"The information requested may not exist in the uploaded data."
-        )
-    elif result.supported_claims < result.total_claims:
+    # ── Add verification note without destroying the actual response ─────
+    if not result.is_verified and result.supported_claims < result.total_claims and result.total_claims > 0:
         unsupported = result.total_claims - result.supported_claims
         clean_response = (
             f"{clean_response}\n\n"
-            f"Note: {unsupported} out of {result.total_claims} claim(s) could not be verified against the uploaded documents."
+            f"Verification note: {result.supported_claims} of {result.total_claims} claim(s) were verified. "
+            f"{unsupported} claim(s) could not be fully verified against the uploaded documents."
         )
 
     return QueryResponse(
