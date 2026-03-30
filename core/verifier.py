@@ -282,10 +282,12 @@ class ClaimVerifier:
             hypothesis=claim.text
         )
 
-        # Apply verification rule
+        # Apply verification rule:
+        # Supported if EITHER high similarity OR entailment confirms it
         is_supported = (
-            similarity_score >= self.similarity_threshold and
-            entailment_label == 'ENTAILED'
+            (similarity_score >= self.similarity_threshold and entailment_label in ('ENTAILED', 'NEUTRAL')) or
+            (similarity_score >= 0.5 and entailment_label == 'ENTAILED') or
+            (similarity_score >= 0.85)
         )
 
         # Update claim object

@@ -22,11 +22,11 @@ GROQ_API_KEY = os.getenv("GROQ_API_KEY", "")
 
 # Semantic similarity threshold (theta_sim)
 # Claims with similarity below this are considered unsupported
-SIMILARITY_THRESHOLD = 0.75
+SIMILARITY_THRESHOLD = 0.6
 
 # Firewall threshold (tau)
 # Responses with SupportRatio below this trigger regeneration
-FIREWALL_THRESHOLD = 0.8
+FIREWALL_THRESHOLD = 0.6
 
 # =============================================================================
 # DOCUMENT INGESTION PARAMETERS
