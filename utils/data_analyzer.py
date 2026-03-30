@@ -10,12 +10,18 @@ on text-similarity retrieval.
 import os
 import re
 import csv
+import json
 from typing import Dict, List, Optional, Any
 
 try:
     import openpyxl
 except ImportError:
     openpyxl = None
+
+try:
+    from groq import Groq
+except ImportError:
+    Groq = None
 
 
 # ── Keyword patterns that signal an analytical question ──────────────────────
@@ -196,6 +202,11 @@ class StructuredDataStore:
 
         # 3) Try row lookup for remaining queries (name-based hallucination check)
         ans = self._try_row_lookup(query)
+        if ans:
+            return ans
+
+        # 4) Fallback: Use Groq LLM to analyze the data for complex questions
+        ans = self._try_llm_analysis(query)
         if ans:
             return ans
 
@@ -912,3 +923,75 @@ class StructuredDataStore:
             return "\n".join(lines)
 
         return None
+
+    # ── LLM-powered Data Analysis ────────────────────────────────────────────
+    def _try_llm_analysis(self, query: str) -> Optional[str]:
+        """Use Groq LLM to analyze structured data for complex questions
+        that the pattern-based methods can't handle."""
+        if Groq is None:
+            return None
+
+        from config.settings import GROQ_API_KEY, LLM_MODEL
+        if not GROQ_API_KEY:
+            return None
+
+        # Build a compact data summary for the LLM
+        data_context = self._build_data_context()
+        if not data_context:
+            return None
+
+        prompt = f"""You are a data analyst. Answer the following question using ONLY the data provided below.
+Be precise and use actual numbers from the data. If the answer cannot be determined from the data, say so.
+Do not include file paths, source references, or [Source: ...] tags.
+Give a clear, natural response.
+
+DATA:
+{data_context}
+
+QUESTION: {query}
+
+ANSWER:"""
+
+        try:
+            client = Groq(api_key=GROQ_API_KEY)
+            response = client.chat.completions.create(
+                model=LLM_MODEL,
+                messages=[
+                    {"role": "system", "content": "You are a precise data analyst. Answer only from the given data. Be concise and accurate."},
+                    {"role": "user", "content": prompt}
+                ],
+                max_tokens=1000,
+                temperature=0.1
+            )
+            answer = response.choices[0].message.content.strip()
+            if answer:
+                return answer
+        except Exception as e:
+            print(f"LLM analysis error: {e}")
+
+        return None
+
+    def _build_data_context(self, max_rows: int = 80) -> str:
+        """Convert stored tables into a compact text format for LLM context."""
+        parts = []
+        for tkey, rows in self.tables.items():
+            headers = self.headers.get(tkey, [])
+            if not rows:
+                continue
+
+            parts.append(f"Table: {tkey}")
+            parts.append(f"Columns: {', '.join(headers)}")
+            parts.append(f"Total rows: {len(rows)}")
+
+            # Include data as CSV-like format (compact)
+            parts.append("Data:")
+            parts.append(" | ".join(headers))
+            for r in rows[:max_rows]:
+                vals = [str(r.get(h, "")) for h in headers]
+                parts.append(" | ".join(vals))
+
+            if len(rows) > max_rows:
+                parts.append(f"... ({len(rows) - max_rows} more rows)")
+            parts.append("")
+
+        return "\n".join(parts)

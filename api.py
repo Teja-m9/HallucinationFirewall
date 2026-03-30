@@ -30,6 +30,7 @@ app.add_middleware(
 )
 
 # ── Global pipeline instance ─────────────────────────────────────────────────
+from config.settings import SIMILARITY_THRESHOLD, FIREWALL_THRESHOLD
 pipeline = None
 DATA_DIR = os.path.join(os.path.dirname(__file__), "data", "sample_docs")
 
@@ -148,13 +149,12 @@ os.makedirs(UPLOAD_DIR, exist_ok=True)
 # ── Endpoints ────────────────────────────────────────────────────────────────
 @app.get("/api/status", response_model=StatusResponse)
 def status():
-    p = get_pipeline()
     return StatusResponse(
-        document_chunks=p.document_count,
+        document_chunks=pipeline.document_count if pipeline else 0,
         documents_loaded=[],
         uploaded_files=uploaded_files,
-        similarity_threshold=p.similarity_threshold,
-        firewall_threshold=p.firewall_threshold,
+        similarity_threshold=SIMILARITY_THRESHOLD,
+        firewall_threshold=FIREWALL_THRESHOLD,
     )
 
 
@@ -393,35 +393,45 @@ def verify_claims(req: VerifyRequest):
 
 @app.post("/api/upload")
 async def upload_document(file: UploadFile = File(...)):
-    """Upload and ingest a document (TXT, PDF, DOCX)."""
-    p = get_pipeline()
-
+    """Upload and ingest a document (TXT, PDF, DOCX, Excel, CSV)."""
     # Validate extension
     ext = os.path.splitext(file.filename)[1].lower()
     if ext not in ALLOWED_EXTENSIONS:
         raise HTTPException(400, f"Unsupported file type: {ext}. Allowed: {', '.join(ALLOWED_EXTENSIONS)}")
 
-    # Save to temp location so the ingestion module can read it
+    # Save file
     save_path = os.path.join(UPLOAD_DIR, file.filename)
     content = await file.read()
     with open(save_path, "wb") as f:
         f.write(content)
 
     try:
-        chunks_added = p.ingest_file(save_path)
-        uploaded_files.append(file.filename)
+        chunks_added = 0
 
-        # Also load into structured data store for analytical queries
+        # For Excel/CSV: load into structured data store (fast, no ML models needed)
         if ext in (".xlsx", ".xls"):
-            data_store.load_excel(save_path)
+            rows = data_store.load_excel(save_path)
+            chunks_added = rows
         elif ext == ".csv":
-            data_store.load_csv(save_path)
+            rows = data_store.load_csv(save_path)
+            chunks_added = rows
+
+        # For text documents: need the full pipeline with ML models
+        if ext in (".txt", ".pdf", ".docx"):
+            p = get_pipeline()
+            chunks_added = p.ingest_file(save_path)
+
+        # Also ingest into vector store for RAG queries (if pipeline already loaded)
+        if pipeline is not None and ext in (".xlsx", ".xls", ".csv"):
+            chunks_added = pipeline.ingest_file(save_path)
+
+        uploaded_files.append(file.filename)
 
         return {
             "filename": file.filename,
             "file_type": ext,
             "chunks_added": chunks_added,
-            "total_chunks": p.document_count,
+            "total_chunks": pipeline.document_count if pipeline else chunks_added,
         }
     except Exception as e:
         raise HTTPException(500, f"Failed to process {file.filename}: {str(e)}")
