@@ -200,10 +200,12 @@ class StructuredDataStore:
                 if result:
                     return result
 
-        # 3) Try row lookup for remaining queries (name-based hallucination check)
-        ans = self._try_row_lookup(query)
-        if ans:
-            return ans
+        # 3) Try row lookup ONLY if query looks like a person/ID lookup
+        #    (not for general knowledge questions about PDF content)
+        if self._is_entity_query(query):
+            ans = self._try_row_lookup(query)
+            if ans:
+                return ans
 
         # 4) Fallback: Use Groq LLM to analyze the data for complex questions
         ans = self._try_llm_analysis(query)
@@ -211,6 +213,30 @@ class StructuredDataStore:
             return ans
 
         return None
+
+    def _is_entity_query(self, query: str) -> bool:
+        """Check if the query is asking about a specific person/ID/record,
+        not a general knowledge question."""
+        # Has a roll number / ID pattern
+        if self._ID_PATTERN.search(query) or self._GENERIC_ID.search(query):
+            return True
+        # Has a name in ALL CAPS (like student names)
+        if re.search(r'\b[A-Z][A-Z ]{4,}\b', query):
+            return True
+        # Query patterns that suggest a person lookup
+        person_patterns = (
+            r'\bwho is\b', r'\btell me about\b', r'\bdetails of\b',
+            r'\battendance of\b', r'\bmarks of\b', r'\bscore of\b',
+        )
+        q_lower = query.lower()
+        if any(re.search(p, q_lower) for p in person_patterns):
+            # But only if the query is short (likely a name lookup, not a concept question)
+            # "who is mahesh babu" = name lookup
+            # "what is hallucination firewall" = concept question
+            words = query.split()
+            if len(words) <= 8:
+                return True
+        return False
 
     # ── Row Lookup ────────────────────────────────────────────────────────────
 
