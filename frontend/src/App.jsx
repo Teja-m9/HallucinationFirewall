@@ -270,7 +270,7 @@ function DetailTable({ text }) {
 /* ═══════════════════════════════════════════════════════════════════════════ */
 /*  TAB: UPLOAD DOCUMENTS                                                     */
 /* ═══════════════════════════════════════════════════════════════════════════ */
-function UploadTab({ onStatusChange }) {
+function UploadTab({ onStatusChange, onSwitchToQuery }) {
   const [uploading, setUploading] = useState(false);
   const [uploadedFiles, setUploadedFiles] = useState([]);
   const [dragOver, setDragOver] = useState(false);
@@ -309,6 +309,8 @@ function UploadTab({ onStatusChange }) {
         prev.map(f => f.name === file.name ? { ...f, status: "done", chunks: data.chunks_added } : f)
       );
       onStatusChange?.();
+      // Auto-switch to query tab after successful upload
+      setTimeout(() => onSwitchToQuery?.(), 1000);
     } catch (e) {
       setError(e.message);
       setUploadedFiles(prev => prev.filter(f => f.name !== file.name || f.status !== "uploading"));
@@ -734,7 +736,10 @@ export default function App() {
     fetch(`${API}/status`).then((r) => r.json()).then(setStatus).catch(() => {});
   }, []);
 
-  useEffect(() => { refreshStatus(); }, [refreshStatus]);
+  // Clear uploads on app start (clean slate each session)
+  useEffect(() => {
+    fetch(`${API}/clear-uploads`, { method: "POST" }).then(() => refreshStatus()).catch(() => refreshStatus());
+  }, [refreshStatus]);
 
   const chunkCount = status?.document_chunks ?? 0;
   const totalDocs = (status?.documents_loaded?.length ?? 0) + (status?.uploaded_files?.length ?? 0);
@@ -797,7 +802,7 @@ export default function App() {
 
       {/* ── Content ─── */}
       <main className="flex-1 max-w-5xl mx-auto px-6 py-8 w-full">
-        {tab === "upload" && <UploadTab onStatusChange={refreshStatus} />}
+        {tab === "upload" && <UploadTab onStatusChange={refreshStatus} onSwitchToQuery={() => setTab("query")} />}
         {tab === "query" && <QueryTab chunkCount={chunkCount} />}
         {tab === "verify" && <VerifyTab />}
         {tab === "about" && <AboutTab />}
