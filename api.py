@@ -149,8 +149,10 @@ os.makedirs(UPLOAD_DIR, exist_ok=True)
 # ── Endpoints ────────────────────────────────────────────────────────────────
 @app.get("/api/status", response_model=StatusResponse)
 def status():
+    pipeline_chunks = pipeline.document_count if pipeline else 0
+    data_store_rows = sum(len(rows) for rows in data_store.tables.values())
     return StatusResponse(
-        document_chunks=pipeline.document_count if pipeline else 0,
+        document_chunks=pipeline_chunks + data_store_rows,
         documents_loaded=[],
         uploaded_files=uploaded_files,
         similarity_threshold=SIMILARITY_THRESHOLD,
