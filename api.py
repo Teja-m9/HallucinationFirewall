@@ -396,44 +396,31 @@ def verify_claims(req: VerifyRequest):
 @app.post("/api/upload")
 async def upload_document(file: UploadFile = File(...)):
     """Upload and ingest a document (TXT, PDF, DOCX, Excel, CSV)."""
-    # Validate extension
     ext = os.path.splitext(file.filename)[1].lower()
     if ext not in ALLOWED_EXTENSIONS:
         raise HTTPException(400, f"Unsupported file type: {ext}. Allowed: {', '.join(ALLOWED_EXTENSIONS)}")
 
-    # Save file
     save_path = os.path.join(UPLOAD_DIR, file.filename)
     content = await file.read()
     with open(save_path, "wb") as f:
         f.write(content)
 
     try:
-        chunks_added = 0
-
-        # For Excel/CSV: load into structured data store (fast, no ML models needed)
-        if ext in (".xlsx", ".xls"):
-            rows = data_store.load_excel(save_path)
-            chunks_added = rows
-        elif ext == ".csv":
-            rows = data_store.load_csv(save_path)
-            chunks_added = rows
-
-        # For text documents: need the full pipeline with ML models
-        if ext in (".txt", ".pdf", ".docx"):
-            p = get_pipeline()
-            chunks_added = p.ingest_file(save_path)
-
-        # Also ingest into vector store for RAG queries (if pipeline already loaded)
-        if pipeline is not None and ext in (".xlsx", ".xls", ".csv"):
-            chunks_added = pipeline.ingest_file(save_path)
-
+        p = get_pipeline()
+        chunks_added = p.ingest_file(save_path)
         uploaded_files.append(file.filename)
+
+        # Also load into structured data store for Excel/CSV analytical queries
+        if ext in (".xlsx", ".xls"):
+            data_store.load_excel(save_path)
+        elif ext == ".csv":
+            data_store.load_csv(save_path)
 
         return {
             "filename": file.filename,
             "file_type": ext,
             "chunks_added": chunks_added,
-            "total_chunks": pipeline.document_count if pipeline else chunks_added,
+            "total_chunks": p.document_count,
         }
     except Exception as e:
         raise HTTPException(500, f"Failed to process {file.filename}: {str(e)}")
@@ -482,6 +469,20 @@ def delete_file(req: DeleteRequest):
         "remaining_files": uploaded_files,
         "total_chunks": p.document_count,
     }
+
+
+# ── Pre-load pipeline at startup ─────────────────────────────────────────────
+import threading
+
+def _preload_pipeline():
+    """Load ML models in background so first request is fast."""
+    print("Pre-loading VDHF pipeline (this may take a minute)...")
+    get_pipeline()
+    print("Pipeline ready!")
+
+@app.on_event("startup")
+def startup_event():
+    threading.Thread(target=_preload_pipeline, daemon=True).start()
 
 
 # ── Serve React build ────────────────────────────────────────────────────────
