@@ -9,21 +9,20 @@ import sys
 from typing import List, Optional, Dict, Any
 from dataclasses import dataclass
 
-# Import all modules
-from config import (
+from config.settings import (
     SIMILARITY_THRESHOLD,
     FIREWALL_THRESHOLD,
     MAX_REGENERATION_ATTEMPTS,
     TOP_K_RETRIEVAL
 )
-from ingestion import DocumentIngestion, DocumentChunk
-from embeddings import EmbeddingModel, VectorStore
-from retriever import Retriever, RetrievedEvidence, RAGPipeline
-from generator import ResponseGenerator, GenerationResult
-from claim_extractor import ClaimExtractor, Claim
-from verifier import ClaimVerifier, VerificationResult
-from firewall import HallucinationFirewall, FirewallResult, FirewallDecision
-from prompt_refiner import PromptRefiner, RegenerationManager
+from ingestion.loader import DocumentIngestion, DocumentChunk
+from ingestion.embeddings import EmbeddingModel, VectorStore
+from retrieval.retriever import Retriever, RetrievedEvidence, RAGPipeline
+from generation.generator import ResponseGenerator, GenerationResult
+from core.claim_extractor import ClaimExtractor, Claim
+from core.verifier import ClaimVerifier, VerificationResult
+from core.firewall import HallucinationFirewall, FirewallResult, FirewallDecision
+from generation.prompt_refiner import PromptRefiner, RegenerationManager
 
 
 @dataclass
@@ -39,7 +38,7 @@ class PipelineResult:
     retrieved_evidence: List[RetrievedEvidence]
     claims: List[Claim]
     verification_results: List[VerificationResult]
-    
+
     def __str__(self) -> str:
         status = "✓ VERIFIED" if self.is_verified else "⚠ PARTIALLY VERIFIED"
         return (
@@ -59,7 +58,7 @@ class PipelineResult:
 class VDHFPipeline:
     """
     Verification-Driven Hallucination Firewall Pipeline
-    
+
     Complete pipeline that:
     1. Ingests documents
     2. Retrieves relevant evidence for queries
@@ -69,7 +68,7 @@ class VDHFPipeline:
     6. Regenerates if necessary
     7. Delivers verified response
     """
-    
+
     def __init__(
         self,
         similarity_threshold: float = SIMILARITY_THRESHOLD,
@@ -83,10 +82,10 @@ class VDHFPipeline:
         self.firewall_threshold = firewall_threshold
         self.max_regeneration_attempts = max_regeneration_attempts
         self.top_k = top_k
-        
+
         # Initialize components
         print("Initializing VDHF Pipeline components...")
-        
+
         self.embedding_model = EmbeddingModel()
         self.vector_store = VectorStore(
             collection_name=collection_name,
@@ -109,20 +108,20 @@ class VDHFPipeline:
             max_attempts=max_regeneration_attempts
         )
         self.ingestion = DocumentIngestion()
-        
+
         print("VDHF Pipeline initialized successfully!")
-    
+
     # =========================================================================
     # Document Management
     # =========================================================================
-    
+
     def ingest_file(self, file_path: str) -> int:
         """
         Ingest a single document file.
-        
+
         Args:
             file_path: Path to the document
-            
+
         Returns:
             Number of chunks created
         """
@@ -130,14 +129,14 @@ class VDHFPipeline:
         self.vector_store.add_chunks(chunks)
         print(f"Ingested {file_path}: {len(chunks)} chunks")
         return len(chunks)
-    
+
     def ingest_directory(self, directory_path: str) -> int:
         """
         Ingest all documents from a directory.
-        
+
         Args:
             directory_path: Path to the directory
-            
+
         Returns:
             Number of chunks created
         """
@@ -145,15 +144,15 @@ class VDHFPipeline:
         self.vector_store.add_chunks(chunks)
         print(f"Ingested {directory_path}: {len(chunks)} chunks total")
         return len(chunks)
-    
+
     def ingest_text(self, text: str, source: str = "direct_input") -> int:
         """
         Ingest text directly.
-        
+
         Args:
             text: Text content to ingest
             source: Source identifier
-            
+
         Returns:
             Number of chunks created
         """
@@ -161,29 +160,29 @@ class VDHFPipeline:
         self.vector_store.add_chunks(chunks)
         print(f"Ingested text from {source}: {len(chunks)} chunks")
         return len(chunks)
-    
+
     def clear_documents(self) -> None:
         """Clear all documents from the vector store."""
         self.vector_store.clear()
         print("Cleared all documents from vector store")
-    
+
     @property
     def document_count(self) -> int:
         """Get number of document chunks in the store."""
         return self.vector_store.count()
-    
+
     # =========================================================================
     # Query Processing
     # =========================================================================
-    
+
     def query(self, user_query: str, verbose: bool = False) -> PipelineResult:
         """
         Process a user query through the complete VDHF pipeline.
-        
+
         Args:
             user_query: User's question
             verbose: Whether to print detailed progress
-            
+
         Returns:
             PipelineResult with verified response
         """
@@ -191,71 +190,71 @@ class VDHFPipeline:
             print(f"\n{'='*60}")
             print(f"Processing Query: {user_query}")
             print(f"{'='*60}")
-        
+
         # Step 1: Retrieve relevant evidence
         if verbose:
             print("\n[1] Retrieving evidence...")
         evidence_list = self.retriever.retrieve(user_query, top_k=self.top_k)
-        
+
         if not evidence_list:
             return self._create_no_evidence_result(user_query)
-        
+
         if verbose:
             print(f"    Retrieved {len(evidence_list)} evidence chunks")
-        
+
         # Step 2: Generate initial response
         if verbose:
             print("\n[2] Generating initial response...")
         context = self.retriever.get_context_string(evidence_list)
         initial_response = self.generator.generate(user_query, context)
-        
+
         if verbose:
             print(f"    Generated response: {initial_response[:100]}...")
-        
+
         # Step 3: Extract claims
         if verbose:
             print("\n[3] Extracting claims...")
         claims = self.claim_extractor.extract_claims(initial_response)
-        
+
         if verbose:
             print(f"    Extracted {len(claims)} claims")
-        
+
         # Handle case with no extractable claims
         if not claims:
             return self._create_no_claims_result(
                 user_query, initial_response, evidence_list
             )
-        
+
         # Step 4-6: Verify, firewall check, and potentially regenerate
         current_response = initial_response
         current_claims = claims
         regeneration_count = 0
-        
+
         for attempt in range(self.max_regeneration_attempts + 1):
             # Step 4: Verify claims
             if verbose:
                 print(f"\n[4] Verifying claims (attempt {attempt + 1})...")
-            
+
             verification_results = self.verifier.verify_all_claims(
                 current_claims, evidence_list
             )
-            
+
             # Step 5: Apply firewall
             if verbose:
                 print("\n[5] Applying firewall...")
-            
+
             firewall_result = self.firewall.decision_engine.evaluate(verification_results)
-            
+
             if verbose:
                 print(f"    Support ratio: {firewall_result.support_ratio:.2%}")
                 print(f"    Decision: {firewall_result.decision.value}")
-            
+
             # Step 6: Check if regeneration needed
             if firewall_result.is_safe:
                 if verbose:
                     print("\n[6] Response passed firewall ✓")
                 break
-            
+
             # Attempt regeneration
             if not self.regeneration_manager.should_regenerate(
                 firewall_result, attempt + 1
@@ -263,31 +262,31 @@ class VDHFPipeline:
                 if verbose:
                     print("\n[6] Max regeneration attempts reached")
                 break
-            
+
             if verbose:
                 print(f"\n[6] Regenerating response (attempt {attempt + 2})...")
-            
+
             regeneration_count += 1
-            
+
             # Generate refined prompt
             refined_prompt = self.regeneration_manager.prepare_regeneration(
                 query=user_query,
                 firewall_result=firewall_result,
                 use_strict_mode=True
             )
-            
+
             # Regenerate response
             current_response = self.generator._generate_mock(
                 user_query,
                 "\n".join(self.firewall.decision_engine.get_verified_evidence(firewall_result))
             )
-            
+
             # Re-extract claims
             current_claims = self.claim_extractor.extract_claims(current_response)
-            
+
             if not current_claims:
                 break
-        
+
         # Create final result
         return PipelineResult(
             query=user_query,
@@ -301,7 +300,7 @@ class VDHFPipeline:
             claims=current_claims,
             verification_results=verification_results
         )
-    
+
     def _create_no_evidence_result(self, query: str) -> PipelineResult:
         """Create result when no evidence is found."""
         return PipelineResult(
@@ -316,7 +315,7 @@ class VDHFPipeline:
             claims=[],
             verification_results=[]
         )
-    
+
     def _create_no_claims_result(
         self,
         query: str,
@@ -336,11 +335,11 @@ class VDHFPipeline:
             claims=[],
             verification_results=[]
         )
-    
+
     # =========================================================================
     # Analysis and Debugging
     # =========================================================================
-    
+
     def analyze_response(
         self,
         response: str,
@@ -348,62 +347,19 @@ class VDHFPipeline:
     ) -> Dict[str, Any]:
         """
         Analyze a response without regeneration.
-        
+
         Useful for debugging and understanding verification.
         """
         claims = self.claim_extractor.extract_claims(response)
         verification_results = self.verifier.verify_all_claims(claims, evidence_list)
         firewall_result = self.firewall.decision_engine.evaluate(verification_results)
-        
+
         return {
             'claims': claims,
             'verification_results': verification_results,
             'firewall_result': firewall_result,
             'summary': self.verifier.get_verification_summary(verification_results)
         }
-
-
-def create_sample_documents():
-    """Create sample documents for testing."""
-    sample_dir = os.path.join(os.path.dirname(__file__), "sample_docs")
-    os.makedirs(sample_dir, exist_ok=True)
-    
-    sample_content = """
-Python Programming Language
-
-Python is a high-level, general-purpose programming language. Its design philosophy 
-emphasizes code readability with the use of significant indentation.
-
-Python was conceived in the late 1980s by Guido van Rossum at Centrum Wiskunde & 
-Informatica (CWI) in the Netherlands. Python was first released in 1991.
-
-Guido van Rossum began working on Python in the late 1980s as a successor to the 
-ABC programming language. He chose the name Python because he was a fan of the 
-British comedy series "Monty Python's Flying Circus."
-
-Python consistently ranks as one of the most popular programming languages. 
-It is used for web development, data science, artificial intelligence, 
-scientific computing, and automation.
-
-Key features of Python include:
-- Dynamic typing and binding
-- Built-in data structures like lists, tuples, and dictionaries
-- Support for modules and packages
-- Extensive standard library
-- Support for multiple programming paradigms
-
-Python 2.0 was released on October 16, 2000. Python 3.0 was released on 
-December 3, 2008. Python 2.7 reached end of life on January 1, 2020.
-
-The Python Software Foundation (PSF) is a non-profit organization that holds 
-the intellectual property rights behind Python and organizes PyCon.
-"""
-    
-    sample_file = os.path.join(sample_dir, "sample.txt")
-    with open(sample_file, "w", encoding="utf-8") as f:
-        f.write(sample_content)
-    
-    return sample_file
 
 
 def interactive_mode(pipeline: VDHFPipeline):
@@ -417,19 +373,19 @@ def interactive_mode(pipeline: VDHFPipeline):
     print("  /count          - Show document count")
     print("  /quit           - Exit")
     print("="*60)
-    
+
     while True:
         try:
             user_input = input("\nYou: ").strip()
-            
+
             if not user_input:
                 continue
-            
+
             # Handle commands
             if user_input.startswith("/"):
                 parts = user_input.split(maxsplit=1)
                 command = parts[0].lower()
-                
+
                 if command == "/quit":
                     print("Goodbye!")
                     break
@@ -452,60 +408,17 @@ def interactive_mode(pipeline: VDHFPipeline):
                 else:
                     print(f"Unknown command: {command}")
                 continue
-            
+
             # Process query
             if pipeline.document_count == 0:
                 print("\nNo documents loaded. Use /ingest <path> to add documents.")
                 continue
-            
+
             result = pipeline.query(user_input, verbose=True)
             print(result)
-            
+
         except KeyboardInterrupt:
             print("\nGoodbye!")
             break
         except Exception as e:
             print(f"\nError: {e}")
-
-
-def main():
-    """Main entry point."""
-    print("="*60)
-    print("Verification-Driven Hallucination Firewall (VDHF)")
-    print("="*60)
-    
-    # Create pipeline
-    pipeline = VDHFPipeline()
-    
-    # Check for sample documents
-    sample_file = create_sample_documents()
-    
-    # Ingest sample documents
-    print(f"\nIngesting sample documents from {sample_file}...")
-    pipeline.ingest_file(sample_file)
-    
-    print(f"\nTotal documents in store: {pipeline.document_count} chunks")
-    
-    # Test queries
-    test_queries = [
-        "When was Python released and who created it?",
-        "What are the key features of Python?",
-        "When did Python 3.0 come out?"
-    ]
-    
-    print("\n" + "="*60)
-    print("Running test queries...")
-    print("="*60)
-    
-    for query in test_queries:
-        result = pipeline.query(query, verbose=False)
-        print(result)
-    
-    # Start interactive mode
-    print("\n" + "="*60)
-    print("Starting interactive mode...")
-    interactive_mode(pipeline)
-
-
-if __name__ == "__main__":
-    main()

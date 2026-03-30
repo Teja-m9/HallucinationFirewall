@@ -85,7 +85,7 @@ MAX_REGENERATION_ATTEMPTS = 2
 # PROMPT TEMPLATES
 # =============================================================================
 
-INITIAL_GENERATION_PROMPT = """Answer the question using the following context. Use the information faithfully and accurately. Do not add information not present in the context.
+INITIAL_GENERATION_PROMPT = """Answer the question using the following context. Use the information faithfully and accurately. Do not add information not present in the context. Do not include source references, file paths, or [Source: ...] tags in your answer — just provide a clean, natural response.
 
 Context:
 {context}
@@ -99,6 +99,7 @@ REFINED_GENERATION_PROMPT = """Rewrite the answer using only the verified eviden
 Exclude any unsupported claims.
 If evidence is insufficient, clearly state the limitation.
 Do not introduce external information not present in the evidence.
+Do not include source references, file paths, or [Source: ...] tags in your answer — just provide a clean, natural response.
 
 Question:
 {question}
