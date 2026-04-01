@@ -98,30 +98,35 @@ class ResponseGenerator:
 
     def _generate_mock(self, query: str, context: str) -> str:
         """Generate a mock response for testing without API."""
-        # Extract key information from context
-        sentences = context.split('.')
-        relevant_sentences = []
+        stop_words = {'the', 'a', 'an', 'is', 'are', 'was', 'were', 'be', 'been',
+                      'what', 'how', 'who', 'which', 'where', 'when', 'why', 'do',
+                      'does', 'did', 'to', 'of', 'in', 'for', 'on', 'with', 'at',
+                      'by', 'from', 'and', 'or', 'but', 'if', 'it', 'this', 'that'}
 
-        query_words = set(query.lower().split())
+        query_words = set(query.lower().split()) - stop_words
 
+        # Split into sentences and score by meaningful word overlap
+        sentences = [s.strip() for s in context.split('.') if len(s.strip()) > 20]
+        scored = []
         for sentence in sentences:
-            sentence = sentence.strip()
-            if not sentence:
-                continue
-
-            sentence_words = set(sentence.lower().split())
+            sentence_words = set(sentence.lower().split()) - stop_words
             overlap = query_words & sentence_words
+            if overlap:
+                scored.append((len(overlap), sentence))
 
-            if len(overlap) >= 1 or len(relevant_sentences) < 2:
-                relevant_sentences.append(sentence)
+        # Sort by relevance (most overlapping words first)
+        scored.sort(key=lambda x: x[0], reverse=True)
 
-        if relevant_sentences:
-            response = ". ".join(relevant_sentences[:3])
+        if scored:
+            best = [s for _, s in scored[:4]]
+            response = ". ".join(best)
             if not response.endswith('.'):
                 response += '.'
             return response
+        elif context:
+            return context[:500].rsplit('.', 1)[0] + '.'
         else:
-            return f"Based on the available information: {context[:200]}..."
+            return "No relevant information found in the uploaded documents."
 
     def _generate_mock_from_prompt(self, prompt: str) -> str:
         """Extract a simple response from the prompt context."""

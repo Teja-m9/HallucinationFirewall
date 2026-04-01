@@ -275,10 +275,12 @@ class VDHFPipeline:
                 use_strict_mode=True
             )
 
-            # Regenerate response
-            current_response = self.generator._generate_mock(
-                user_query,
-                "\n".join(self.firewall.decision_engine.get_verified_evidence(firewall_result))
+            # Regenerate response using Groq (or mock fallback)
+            verified_evidence = "\n".join(self.firewall.decision_engine.get_verified_evidence(firewall_result))
+            current_response = self.generator.regenerate_with_refinement(
+                query=user_query,
+                verified_evidence=verified_evidence,
+                prompt_template=refined_prompt
             )
 
             # Re-extract claims
