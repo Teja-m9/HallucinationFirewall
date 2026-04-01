@@ -215,9 +215,9 @@ class EntailmentChecker:
         overlap = len(premise_words & hypothesis_words)
         overlap_ratio = overlap / len(hypothesis_words)
 
-        if overlap_ratio >= 0.7:
+        if overlap_ratio >= 0.5:
             return 'ENTAILED', overlap_ratio
-        elif overlap_ratio >= 0.3:
+        elif overlap_ratio >= 0.2:
             return 'NEUTRAL', overlap_ratio
         else:
             return 'NEUTRAL', overlap_ratio

@@ -100,8 +100,12 @@ class VectorStore:
         # Initialize embedding model
         self.embedding_model = embedding_model or EmbeddingModel()
 
-        # Initialize ChromaDB client (in-memory for simplicity)
-        self.client = chromadb.Client()
+        # Initialize ChromaDB client (in-memory)
+        try:
+            self.client = chromadb.EphemeralClient()
+        except (AttributeError, Exception):
+            # Fallback for older chromadb versions
+            self.client = chromadb.Client()
 
         # Get or create collection
         self.collection = self.client.get_or_create_collection(
