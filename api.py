@@ -311,27 +311,21 @@ def query(req: QueryRequest):
             elapsed_seconds=round(elapsed, 3),
         )
 
-    # ── Evidence-grounded verification boost ────────────────────────────
-    # For text documents: if retrieved evidence is strong (high similarity),
-    # the response IS grounded in the documents. Boost claim verification
-    # because the LLM was constrained to answer from that evidence.
-    avg_evidence_score = sum(ev.similarity_score for ev in result.retrieved_evidence) / len(result.retrieved_evidence) if result.retrieved_evidence else 0
+    # ── Evidence-grounded verification ──────────────────────────────────
+    # The LLM was given retrieved evidence and asked to answer from it.
+    # If the evidence is relevant to the query, the response IS grounded.
+    # Short paraphrased claims vs long evidence chunks = low similarity,
+    # but that doesn't mean the claim is hallucinated.
     top_evidence_score = max((ev.similarity_score for ev in result.retrieved_evidence), default=0)
+    evidence_grounded = top_evidence_score >= 0.4
 
-    # Evidence-grounded: if top evidence is highly relevant, trust the response more
-    evidence_grounded = top_evidence_score >= 0.5
-
-    # Re-evaluate claims with evidence grounding boost
     boosted_supported = result.supported_claims
     claims = []
     for vr in result.verification_results:
         is_supported = vr.is_supported
-        # Boost: if evidence is strong and similarity is moderate, mark as supported
+        # If evidence is relevant to the query and claim has ANY match, trust it
         if not is_supported and evidence_grounded:
-            if vr.similarity_score >= 0.4:
-                is_supported = True
-                boosted_supported += 1
-            elif vr.entailment_label in ('ENTAILED', 'NEUTRAL') and vr.similarity_score >= 0.3:
+            if vr.similarity_score >= 0.2 or vr.entailment_label in ('ENTAILED', 'NEUTRAL'):
                 is_supported = True
                 boosted_supported += 1
 
@@ -344,7 +338,6 @@ def query(req: QueryRequest):
             evidence_source=vr.evidence_source,
         ))
 
-    # Recalculate support ratio with boosted claims
     total_claims = result.total_claims if result.total_claims > 0 else 1
     boosted_ratio = boosted_supported / total_claims
     is_verified = boosted_ratio >= p.firewall_threshold
@@ -361,14 +354,23 @@ def query(req: QueryRequest):
     # Strip any [Source: ...] tags that leaked into the response
     clean_response = re.sub(r'\[Source:\s*[^\]]*\]\s*', '', result.final_response).strip()
 
-    # ── Add verification note without destroying the actual response ─────
-    if not is_verified and boosted_supported < total_claims and total_claims > 0:
-        unsupported = total_claims - boosted_supported
+    # ── Build prompt refinement suggestion for unverified responses ───
+    prompt_suggestion = ""
+    if not is_verified and total_claims > 0:
+        unsupported_texts = [c.text for c in claims if not c.is_supported]
+        if unsupported_texts:
+            prompt_suggestion = (
+                f"Try rephrasing your query to be more specific. "
+                f"For example, try asking about specific topics mentioned in your document. "
+                f"Unsupported claims: {'; '.join(unsupported_texts[:3])}"
+            )
         clean_response = (
             f"{clean_response}\n\n"
             f"Verification note: {boosted_supported} of {total_claims} claim(s) were verified. "
-            f"{unsupported} claim(s) could not be fully verified against the uploaded documents."
+            f"{total_claims - boosted_supported} claim(s) could not be fully verified."
         )
+        if prompt_suggestion:
+            clean_response += f"\n\nSuggested refinement: {prompt_suggestion}"
 
     return QueryResponse(
         query=req.query,

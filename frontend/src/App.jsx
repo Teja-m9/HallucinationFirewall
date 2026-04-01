@@ -576,6 +576,46 @@ function QueryTab({ chunkCount }) {
             </div>
           </div>
 
+          {/* Prompt Refinement Suggestion */}
+          {!result.is_verified && result.total_claims > 0 && (
+            <div className="bg-gradient-to-r from-indigo-900/30 to-purple-900/20 border border-indigo-500/30 rounded-2xl p-5">
+              <div className="flex items-center gap-2 mb-3">
+                <Zap />
+                <h3 className="text-sm font-semibold uppercase tracking-wider text-indigo-300">Prompt Refinement Suggested</h3>
+              </div>
+              <p className="text-sm text-slate-300 mb-3">
+                The response could not be fully verified. Try refining your query to get better results:
+              </p>
+              <div className="space-y-2">
+                {result.claims.filter(c => !c.is_supported).slice(0, 3).map((c, i) => (
+                  <div key={i} className="text-xs bg-red-950/30 border border-red-500/20 rounded-lg px-3 py-2 text-red-300">
+                    Unverified: {c.text.length > 120 ? c.text.slice(0, 118) + "..." : c.text}
+                  </div>
+                ))}
+              </div>
+              <div className="mt-3 flex flex-wrap gap-2">
+                <button
+                  onClick={() => run(`Based on the uploaded document, ${query}`)}
+                  className="text-xs bg-indigo-600/30 hover:bg-indigo-600/50 border border-indigo-500/30 text-indigo-300 py-1.5 px-3 rounded-full transition-all"
+                >
+                  Try: "Based on the uploaded document, {query.length > 30 ? query.slice(0, 28) + "..." : query}"
+                </button>
+                <button
+                  onClick={() => run(`Explain in detail: ${query}`)}
+                  className="text-xs bg-indigo-600/30 hover:bg-indigo-600/50 border border-indigo-500/30 text-indigo-300 py-1.5 px-3 rounded-full transition-all"
+                >
+                  Try: "Explain in detail: {query.length > 30 ? query.slice(0, 28) + "..." : query}"
+                </button>
+                <button
+                  onClick={() => run(`What does the document say about ${query.replace(/^(what is|explain|describe|tell me about)\s*/i, '')}`)}
+                  className="text-xs bg-indigo-600/30 hover:bg-indigo-600/50 border border-indigo-500/30 text-indigo-300 py-1.5 px-3 rounded-full transition-all"
+                >
+                  Try: "What does the document say about..."
+                </button>
+              </div>
+            </div>
+          )}
+
           {/* Claims */}
           {result.claims.length > 0 && (
             <div>
